@@ -736,7 +736,7 @@ async function simulateArbitrumRetryable(config: SimulationConfigArbRetryable): 
   const simTimestamp = BigNumber.from(latestBlock.timestamp + 1)
 
   const simulationPayload: TenderlyPayload = {
-    network_id: '42161',
+    network_id: chainId === 42161 ? '42161' : '42170',
     // this field represents the block state to simulate against, so we use the latest block number
     block_number: latestBlock.number,
     from: from,
