@@ -5,7 +5,7 @@ import { hexStripZeros } from '@ethersproject/bytes'
 import { HashZero, Zero } from '@ethersproject/constants'
 import { keccak256 } from '@ethersproject/keccak256'
 import { toUtf8Bytes } from '@ethersproject/strings'
-import { l1provider, provider, arb1provider } from './ethers'
+import { l1provider, provider, arb1provider, novaprovider } from './ethers'
 import mftch, { FETCH_OPT } from 'micro-ftch'
 // @ts-ignore
 const fetchUrl = mftch.default
@@ -698,7 +698,7 @@ async function simulateArbitrumL2ToL1(config: SimulationConfigArbL2ToL1): Promis
 // This function simulate the execution of a retryable ticket on Arbitrum
 async function simulateArbitrumRetryable(config: SimulationConfigArbRetryable): Promise<SimulationResult> {
   // --- Validate config ---
-  const { targets, values, calldatas, description, signatures, parentId, from } = config
+  const { targets, values, calldatas, description, signatures, parentId, from, chainId } = config
   if (targets.length !== 1) throw new Error('targets must be length 1')
   if (targets.length !== values.length) throw new Error('targets and values must be the same length')
   if (targets.length !== calldatas.length) throw new Error('targets and calldatas must be the same length')
@@ -706,9 +706,10 @@ async function simulateArbitrumRetryable(config: SimulationConfigArbRetryable): 
   const target = targets[0]
 
   // --- Get details about the proposal we're simulating ---
-  const network = await arb1provider.getNetwork()
+  const l2provider = chainId === 42161 ? arb1provider : novaprovider
+  const network = await l2provider.getNetwork()
   const blockNumberToUse = (await getLatestBlock(network.chainId)) - 3 // subtracting a few blocks to ensure tenderly has the block
-  const latestBlock = await arb1provider.getBlock(blockNumberToUse)
+  const latestBlock = await l2provider.getBlock(blockNumberToUse)
 
   const proposalId = BigNumber.from(parentId).add(config.idoffset)
 

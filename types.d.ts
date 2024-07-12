@@ -53,6 +53,7 @@ export interface SimulationConfigArbRetryable extends SimulationConfigBase {
   parentId: BigNumberish
   idoffset: BigNumberish
   from: string
+  chainId: 42161 | 42170
 }
 
 export type SimulationConfig =
