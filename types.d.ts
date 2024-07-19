@@ -53,6 +53,7 @@ export interface SimulationConfigArbRetryable extends SimulationConfigBase {
   parentId: BigNumberish
   idoffset: BigNumberish
   from: string
+  chainId: 42161 | 42170
 }
 
 export type SimulationConfig =
@@ -176,7 +177,7 @@ type ContractObject = {
 }
 
 export type TenderlyPayload = {
-  network_id: '1' | '3' | '4' | '5' | '42' | '42161'
+  network_id: '1' | '3' | '4' | '5' | '42' | '42161' | '42170'
   block_number?: number
   transaction_index?: number
   from: string

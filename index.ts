@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 import { BigNumber, BigNumberish, Contract, constants } from 'ethers'
 import { DAO_NAME, GOVERNOR_ADDRESS, SIM_NAME } from './utils/constants'
-import { arb1provider, l1provider, provider } from './utils/clients/ethers'
+import { arb1provider, novaprovider, l1provider, provider } from './utils/clients/ethers'
 import { simulate } from './utils/clients/tenderly'
 import {
   AllCheckResults,
@@ -88,9 +88,13 @@ async function simRetryable(sr: SimulationResult, simname: string) {
   const messages: {
     inboxMessageEvent: EventArgs<InboxMessageDeliveredEvent>
     bridgeMessageEvent: EventArgs<MessageDeliveredEvent>
+    chainId: 42161 | 42170
   }[] = []
+  const arb1Inbox = (await getL2Network(arb1provider as any)).ethBridge.inbox.toLowerCase()
+  const novaInbox = (await getL2Network(novaprovider as any)).ethBridge.inbox.toLowerCase()
   for (const bm of bridgeMessages) {
-    if (bm.inbox !== (await getL2Network(arb1provider as any)).ethBridge.inbox) continue // arb1 inbox
+    const chainId = bm.inbox.toLowerCase() === arb1Inbox ? 42161 : bm.inbox.toLowerCase() === novaInbox ? 42170 : 0
+    if (chainId === 0) continue // unknown inbox
     const im = inboxMessages.filter((i) => i.messageNum.eq(bm.messageIndex))[0]
     if (!im) {
       throw new Error(
@@ -100,11 +104,12 @@ async function simRetryable(sr: SimulationResult, simname: string) {
     messages.push({
       inboxMessageEvent: im,
       bridgeMessageEvent: bm,
+      chainId: chainId,
     })
   }
   const simresults = []
   let offset = 10000
-  for (const { inboxMessageEvent, bridgeMessageEvent } of messages) {
+  for (const { inboxMessageEvent, bridgeMessageEvent, chainId } of messages) {
     if (bridgeMessageEvent.kind === InboxMessageKind.L1MessageType_submitRetryableTx) {
       const parser = new SubmitRetryableMessageDataParser()
       const parsedRetryable = parser.parse(inboxMessageEvent.data)
@@ -119,9 +124,10 @@ async function simRetryable(sr: SimulationResult, simname: string) {
         values: [parsedRetryable.l2CallValue], // Array of values with each call.
         signatures: [''], // Array of function signatures. Leave empty if generating calldata with ethers like we do here.
         calldatas: [parsedRetryable.data], // Array of encoded calldatas.
-        description: `# This is a L2 Retryable Execution of simulation ${parentId.toString()} \n.`,
+        description: `# This is a L2(${chainId}) Retryable Execution of simulation ${parentId.toString()} \n.`,
         parentId: parentId,
         idoffset: offset,
+        chainId: chainId
       }
       offset += 10000
       const { sim, proposal, latestBlock } = await simulate(l2tol1config)

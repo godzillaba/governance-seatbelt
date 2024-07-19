@@ -64,6 +64,7 @@ function findMatchingCall(from: string, calldata: string, calls: any[]): FluffyC
   from = getAddress(from)
   // removed check for from address because crosschain execution addresses are not known
   const callMatches = (f: string, c: string) => c === calldata // && getAddress(f) === from
+  if (!calls || !calls.length) return null // Fix TypeError: calls is not iterable
   for (const call of calls) {
     if (callMatches(call.from, call.input)) return call
     if (call.calls) {
