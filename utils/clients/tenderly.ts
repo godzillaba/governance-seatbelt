@@ -811,14 +811,39 @@ async function getLatestBlock(chainId: BigNumberish): Promise<number> {
  */
 async function sendEncodeRequest(payload: any): Promise<StorageEncodingResponse> {
   try {
-    const fetchOptions = <Partial<FETCH_OPT>>{
-      method: 'POST',
-      data: payload,
-      ...TENDERLY_FETCH_OPTIONS,
-    }
-    const response = await fetchUrl(TENDERLY_ENCODE_URL, fetchOptions)
+    // Split into separate requests per address
+    const requests = Object.entries(payload.stateOverrides).map(async ([address, data]) => {
+      const singlePayload = {
+        networkID: payload.networkID,
+        stateOverrides: {
+          [address]: data
+        }
+      }
 
-    return response as StorageEncodingResponse
+      const fetchOptions = <Partial<FETCH_OPT>>{
+        method: 'POST',
+        data: singlePayload,
+        ...TENDERLY_FETCH_OPTIONS,
+      }
+
+      const response = await fetchUrl(TENDERLY_ENCODE_URL, fetchOptions)
+      return response as StorageEncodingResponse
+    })
+
+    // Wait for all requests to complete
+    const responses = await Promise.all(requests)
+
+    // Combine responses back into a single object
+    const combinedResponse: StorageEncodingResponse = {
+      stateOverrides: {}
+    }
+
+    responses.forEach((response) => {
+      Object.assign(combinedResponse.stateOverrides, response.stateOverrides)
+    })
+
+    return combinedResponse
+
   } catch (err) {
     console.log('logging sendEncodeRequest error')
     console.log(JSON.stringify(err, null, 2))
