@@ -620,7 +620,9 @@ async function simulateArbitrumL2ToL1(config: SimulationConfigArbL2ToL1): Promis
   // Run simulation at the block right after the proposal ends.
   const simBlock = endBlock.add(1)
 
-  const simTimestamp = BigNumber.from(latestBlock.timestamp + 1)
+  const isBoldProposal = proposalId.toString() === '101924107818180443784046677916233531742645798596604549673138282938475880000001'
+  const boldProposalExecutionTimestamp = BigNumber.from(1739368800)
+  const simTimestamp = isBoldProposal ? boldProposalExecutionTimestamp : BigNumber.from(latestBlock.timestamp + 1)
   const eta = simTimestamp // set proposal eta to be equal to the timestamp we simulate at
 
   // Compute transaction hashes used by the Timelock
