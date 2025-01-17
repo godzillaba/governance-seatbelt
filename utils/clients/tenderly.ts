@@ -668,7 +668,7 @@ async function simulateArbitrumL2ToL1(config: SimulationConfigArbL2ToL1): Promis
   const simulationPayload: TenderlyPayload = {
     network_id: '1',
     // this field represents the block state to simulate against, so we use the latest block number
-    block_number: process.env.SIM_BLOCK_OVERRIDE ? parseInt(process.env.SIM_BLOCK_OVERRIDE) : latestBlock.number,
+    block_number: isBoldProposal ? 21624528 : latestBlock.number,
     from: DEFAULT_FROM,
     to: timelock,
     input: calldatas[0]
