@@ -2,13 +2,13 @@
   "name": "@arbitrum/governance-seatbelt",
   "version": "1.0.0-alpha.0",
   "engines": {
-    "node": ">=14.16"
+    "node": ">=18"
   },
   "type": "module",
   "description": "Make governance safer",
   "scripts": {
     "compile": "hardhat compile",
-    "start": "ts-node --experimental-specifier-resolution node index.ts",
+    "start": "node --experimental-specifier-resolution node --loader ts-node/esm index.ts",
     "lint:fix": "prettier --write ."
   },
   "repository": {
